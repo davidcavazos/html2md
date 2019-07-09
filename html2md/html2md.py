@@ -100,17 +100,3 @@ def convert(html):
     doc(e).replace_with(text)
 
   return multiple_newlines_re.sub('\n\n', doc.html()).strip()
-
-
-if __name__ == '__main__':
-  import argparse
-  import fileinput
-
-  parser = argparse.ArgumentParser()
-  parser.add_argument('file', default='-', nargs='?', help='HTML file to convert to Markdown')
-  args = parser.parse_args()
-
-  html = ''.join([line for line in fileinput.input(args.file)])
-  print(convert(html))
-  # with open(args.file) as f:
-  #   print(convert(f.read()))

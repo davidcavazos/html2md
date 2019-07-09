@@ -3,9 +3,12 @@ import setuptools
 with open("README.md") as f:
   long_description = f.read()
 
+with open('requirements.txt') as f:
+  requirements = f.read().splitlines()
+
 setuptools.setup(
     name="html2md",
-    version="0.1.0",
+    version="0.1.1",
     author="David Cavazos",
     author_email="dcavazosw@gmail.com",
     description="HTML to Markdown converter.",
@@ -13,6 +16,12 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/davidcavazos/html2md",
     packages=setuptools.find_packages(),
+    install_requires=requirements,
+    entry_points={
+        'console_scripts': [
+            'html2md = html2md.__main__:main'
+        ],
+    },
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
