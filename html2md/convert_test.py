@@ -2,9 +2,8 @@ import unittest
 
 from html2md import convert
 
-# TODO: make unit tests!
 
-class Html2MdTest(unittest.TestCase):
+class ConvertTest(unittest.TestCase):
   def test_html_page(self):
     html = '''
       <!DOCTYPE html>
