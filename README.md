@@ -140,3 +140,42 @@ Then you can follow the link in your terminal, or navigate to [html2md](https://
 > Afterwards, it will reflect automatically on the Pull Request.
 
 Once everything is okay, it can be merged.
+
+### Publishing a new version
+
+Make sure you have some more tools installed.
+
+```sh
+pip install -U twine
+```
+
+Generate the distribution archives.
+
+```sh
+# Make sure there are no previous builds.
+rm -rf dist/
+
+# Build the distribution package.
+python setup.py sdist bdist_wheel
+
+# Check any problems with the README.
+twine check dist/*
+```
+
+> **Note**: It is *highly recommended* to publish to `TestPyPI` before publishing to `PyPI`.
+>
+> ```sh
+> # To upload to TestPyI.
+> twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+>
+> # To install from TestPyPI.
+> pip install --index-url https://test.pypi.org/simple/ --no-deps html2md
+> ```
+>
+> If everything is working correctly, go ahead and publish to `PyPI`.
+
+To upload to `PyPI`.
+
+```sh
+twine upload dist/*
+```
