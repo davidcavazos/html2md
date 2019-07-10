@@ -47,9 +47,33 @@ First, fork the project.
 # Clone your fork into your local machine.
 # This will create the `origin` remote pointing to your fork.
 git clone git@github.com:<your-username>/html2md.git
+cd html2md
 
 # Add an `upstream` remote pointing to the original repository.
 git remote add upstream git@github.com:davidcavazos/html2md.git
+```
+
+### Setting up your environment
+
+Make sure you have `virtualenv` installed.
+
+```sh
+pip install -U virtualenv
+```
+
+Create and activate a new `virtualenv`.
+
+```sh
+python -m virtualenv env
+source env/bin/activate
+```
+
+> **Note**: Once you are all done, you can deactivate it by running `deactivate`.
+
+Install the requirements.
+
+```sh
+pip install -U -r requirements.txt
 ```
 
 ### Modifying the code
@@ -93,6 +117,8 @@ python setup.py test -s html2md.convert_test.ConvertTest.test_code_block
 
 After all the tests pass, you'll have to create a "Pull Request" with your changes.
 You can create a single commit with all the changes.
+
+> **Note**: You can check your changes with `git status`.
 
 ```sh
 # Create a commit and push it to your fork's branch.
