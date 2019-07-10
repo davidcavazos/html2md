@@ -149,7 +149,8 @@ Make sure you have some more tools installed.
 pip install -U twine
 ```
 
-Generate the distribution archives.
+Change the version on `setup.py`.
+Then, generate the distribution archives.
 
 ```sh
 # Make sure there are no previous builds.
