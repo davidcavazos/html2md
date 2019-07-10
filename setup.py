@@ -17,6 +17,8 @@ setuptools.setup(
     url="https://github.com/davidcavazos/html2md",
     packages=setuptools.find_packages(),
     install_requires=requirements,
+    test_suite='nose.collector',
+    tests_require=['nose'],
     entry_points={
         'console_scripts': [
             'html2md = html2md.__main__:main'
