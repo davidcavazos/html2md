@@ -22,7 +22,8 @@ from html2md import convert
 
 class ConvertTest(unittest.TestCase):
   def test_html_page(self):
-    html = '''
+    expected = 'HTML body!'
+    actual = convert('''
       <!DOCTYPE html>
       <html>
       <head>
@@ -34,12 +35,10 @@ class ConvertTest(unittest.TestCase):
       HTML body!
       </body>
       </html>
-    '''
-    expected = 'HTML body!'
-    self.assertEqual(convert(html), expected)
+    ''')
+    self.assertEqual(expected, actual)
 
   def test_code_block(self):
-    html = "Code block<pre><code>print('hello')</pre></code>"
     expected = '\n'.join([
         'Code block',
         '',
@@ -47,10 +46,10 @@ class ConvertTest(unittest.TestCase):
         "print('hello')",
         "```",
     ])
-    self.assertEqual(convert(html), expected)
+    actual = convert("Code block<pre><code>print('hello')</pre></code>")
+    self.assertEqual(expected, actual)
 
   def test_code_block_with_lang(self):
-    html = '''Code block<pre class="py"><code>print('hello')</pre></code>'''
     expected = '\n'.join([
       'Code block',
       '',
@@ -58,72 +57,66 @@ class ConvertTest(unittest.TestCase):
       "print('hello')",
       "```",
     ])
-    self.assertEqual(convert(html), expected)
+    actual = convert(
+        '''Code block<pre class="py"><code>print('hello')</pre></code>''')
+    self.assertEqual(expected, actual)
 
   def test_hyperlinks(self):
-    html = 'Hyperlink <a href="href">text</a>'
     expected = 'Hyperlink [text](href)'
-    self.assertEqual(convert(html), expected)
+    actual = convert('Hyperlink <a href="href">text</a>')
+    self.assertEqual(expected, actual)
 
   def test_hyperlinks_no_href(self):
-    html = 'Hyperlink <a>text</a>'
     expected = 'Hyperlink [text](text)'
-    self.assertEqual(convert(html), expected)
+    actual = convert('Hyperlink <a>text</a>')
+    self.assertEqual(expected, actual)
 
   def test_image(self):
-    html = 'Image <img alt="alt" src="src" />'
     expected = 'Image ![alt](src)'
-    self.assertEqual(convert(html), expected)
+    actual = convert('Image <img alt="alt" src="src" />')
+    self.assertEqual(expected, actual)
 
   def test_image_no_alt_src(self):
-    html = 'Image <img />'
     expected = 'Image ![]()'
-    self.assertEqual(convert(html), expected)
+    actual = convert('Image <img />')
+    self.assertEqual(expected, actual)
 
   def test_italics(self):
-    html = 'Italics <i>i</i> <em>em</em>'
     expected = 'Italics *i* *em*'
-    self.assertEqual(convert(html), expected)
+    actual = convert('Italics <i>i</i> <em>em</em>')
+    self.assertEqual(expected, actual)
 
   def test_bold(self):
-    html = 'Bold <b>b</b> <strong>strong</strong>'
     expected = 'Bold **b** **strong**'
-    self.assertEqual(convert(html), expected)
+    actual = convert('Bold <b>b</b> <strong>strong</strong>')
+    self.assertEqual(expected, actual)
 
   def test_deleted(self):
-    html = 'Deleted <del>del</del>'
     expected = 'Deleted ~~del~~'
-    self.assertEqual(convert(html), expected)
+    actual = convert('Deleted <del>del</del>')
+    self.assertEqual(expected, actual)
 
   def test_deleted(self):
-    html = 'Deleted <del>del</del>'
     expected = 'Deleted ~~del~~'
-    self.assertEqual(convert(html), expected)
+    actual = convert('Deleted <del>del</del>')
+    self.assertEqual(expected, actual)
 
   def test_code(self):
-    html = 'Code <code>code</code>'
     expected = 'Code `code`'
-    self.assertEqual(convert(html), expected)
+    actual = convert('Code <code>code</code>')
+    self.assertEqual(expected, actual)
 
   def test_nested(self):
-    html = 'Nested <code><del><b><i>nested</i></b></del></code>'
     expected = 'Nested `~~***nested***~~`'
-    self.assertEqual(convert(html), expected)
+    actual = convert('Nested <code><del><b><i>nested</i></b></del></code>')
+    self.assertEqual(expected, actual)
 
   def test_inline_empty(self):
-    html = 'Inline empty <code></code><del></del><b></b><i></i>'
     expected = 'Inline empty'
-    self.assertEqual(convert(html), expected)
+    actual = convert('Inline empty <code></code><del></del><b></b><i></i>')
+    self.assertEqual(expected, actual)
 
   def test_headers(self):
-    html = '\n'.join([
-        '<h1>H1</h1>',
-        '<h2>H2</h2>',
-        '<h3>H3</h3>',
-        '<h4>H4</h4>',
-        '<h5>H5</h5>',
-        '<h6>H6</h6>',
-    ])
     expected = '\n'.join([
         '# H1',
         '',
@@ -137,19 +130,26 @@ class ConvertTest(unittest.TestCase):
         '',
         '###### H6',
     ])
-    self.assertEqual(convert(html), expected)
+    actual = convert('\n'.join([
+        '<h1>H1</h1>',
+        '<h2>H2</h2>',
+        '<h3>H3</h3>',
+        '<h4>H4</h4>',
+        '<h5>H5</h5>',
+        '<h6>H6</h6>',
+    ]))
+    self.assertEqual(expected, actual)
 
   def test_horizontal_ruler(self):
-    html = 'Horizontal ruler<hr>'
     expected = '\n'.join([
         'Horizontal ruler',
         '',
         '---',
     ])
-    self.assertEqual(convert(html), expected)
+    actual = convert('Horizontal ruler<hr>')
+    self.assertEqual(expected, actual)
 
   def test_paragraph(self):
-    html = 'Paragraph<p>a</p><p>b</p>'
     expected = '\n'.join([
         'Paragraph',
         '',
@@ -157,17 +157,11 @@ class ConvertTest(unittest.TestCase):
         '',
         'b',
     ])
-    self.assertEqual(convert(html), expected)
+    actual = convert('Paragraph<p>a</p><p>b</p>')
+    self.assertEqual(expected, actual)
 
   @unittest.skip("TODO: multiline paragraphs not implemented")
   def test_paragraph_multiline(self):
-    html = '''Paragraph<p>
-        multi
-        line
-
-        paragraph
-      </p>
-    '''
     expected = '\n'.join([
         'Paragraph',
         '',
@@ -175,27 +169,26 @@ class ConvertTest(unittest.TestCase):
         'line',
         'paragraph',
     ])
-    self.assertEqual(convert(html), expected)
+    actual = convert('''Paragraph<p>
+        multi
+        line
+
+        paragraph
+      </p>
+    ''')
+    self.assertEqual(expected, actual)
 
   def test_quotes(self):
-    html = 'Quotes<blockquote>blockquote</blockquote>'
     expected = '\n'.join([
         'Quotes',
         '',
         '> blockquote',
     ])
-    self.assertEqual(convert(html), expected)
+    actual = convert('Quotes<blockquote>blockquote</blockquote>')
+    self.assertEqual(expected, actual)
 
   @unittest.skip("TODO: nested quotes not implemented")
   def test_quotes_nested(self):
-    html = '''Nested quotes<blockquote>
-      blockquote
-      <blockquote>nested</blockquote>
-      <blockquote>
-        nested
-        <blockquote>nested double</blockquote>
-      </blockquote>
-    </blockquote>'''
     expected = '\n'.join([
         'Nested quotes',
         '',
@@ -204,46 +197,63 @@ class ConvertTest(unittest.TestCase):
         '> > nested',
         '> > > nested double',
     ])
-    self.assertEqual(convert(html), expected)
+    actual = convert('''Nested quotes<blockquote>
+      blockquote
+      <blockquote>nested</blockquote>
+      <blockquote>
+        nested
+        <blockquote>nested double</blockquote>
+      </blockquote>
+    </blockquote>''')
+    self.assertEqual(expected, actual)
 
   def test_lists_ordered_empty(self):
-    html = 'Ordered list<ol></ol>'
     expected = 'Ordered list'
-    self.assertEqual(convert(html), expected)
+    actual = convert('Ordered list<ol></ol>')
+    self.assertEqual(expected, actual)
 
   def test_lists_ordered(self):
-    html = '''Ordered list<ol>
-      <li>item 1</li>
-      <li>item 2</li>
-    </ol>'''
     expected = '\n'.join([
         'Ordered list',
         '',
         '1. item 1',
         '1. item 2',
     ])
-    self.assertEqual(convert(html), expected)
-
-  def test_lists_unordered_empty(self):
-    html = 'Unordered list<ul></ul>'
-    expected = 'Unordered list'
-    self.assertEqual(convert(html), expected)
-
-  def test_lists_unordered(self):
-    html = '''Unordered list<ul>
+    actual = convert('''Ordered list<ol>
       <li>item 1</li>
       <li>item 2</li>
-    </ul>'''
+    </ol>''')
+    self.assertEqual(expected, actual)
+
+  def test_lists_unordered_empty(self):
+    expected = 'Unordered list'
+    actual = convert('Unordered list<ul></ul>')
+    self.assertEqual(expected, actual)
+
+  def test_lists_unordered(self):
     expected = '\n'.join([
         'Unordered list',
         '',
         '* item 1',
         '* item 2',
     ])
-    self.assertEqual(convert(html), expected)
+    actual = convert('''Unordered list<ul>
+      <li>item 1</li>
+      <li>item 2</li>
+    </ul>''')
+    self.assertEqual(expected, actual)
 
   def test_lists_nested(self):
-    html = '''Nested list<ol>
+    expected = '\n'.join([
+        'Nested list',
+        '',
+        '1. item 1',
+        '1. item 2',
+        '   * item 2.1',
+        '   * item 2.2',
+        '     * item 2.2.1',
+    ])
+    actual = convert('''Nested list<ol>
       <li>item 1</li>
       <li>item 2
         <ul>
@@ -255,21 +265,14 @@ class ConvertTest(unittest.TestCase):
           </li>
         </ul>
       </li>
-    </ol>'''
-    expected = '\n'.join([
-        'Nested list',
-        '',
-        '1. item 1',
-        '1. item 2',
-        '   * item 2.1',
-        '   * item 2.2',
-        '     * item 2.2.1',
-    ])
-    self.assertEqual(convert(html), expected)
+    </ol>''')
+    self.assertEqual(expected, actual)
 
   @unittest.skip("TODO: nested tags not implemented")
   def test_nested_tags_in_lists(self):
-    html = '''Nested tags in lists
+    expected = '\n'.join([
+    ])
+    actual = convert('''Nested tags in lists
       <ul>
         <li>item
           <pre><code>b</code></pre>
@@ -304,10 +307,8 @@ class ConvertTest(unittest.TestCase):
           </ul>
         </li>
       </ul>
-    '''
-    expected = '\n'.join([
-    ])
-    self.assertEqual(convert(html), expected)
+    ''')
+    self.assertEqual(expected, actual)
 
 if __name__ == '__main__':
   unittest.main()
