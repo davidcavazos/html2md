@@ -17,13 +17,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
 import re
 from pyquery import PyQuery
 
 # TODO: support nested tags in lists to be correctly indented.
 
 whitespaces_re = re.compile(r'\n[ \t\f\v]*\n')
-multiple_newlines_re = re.compile(r'\n{3,}')
+multiple_newlines_re = re.compile(r'\n\n\n+')
 
 trim_whitespaces_tags = 'ol|ul|li'
 trim_whitespaces_open_re = re.compile(r'\s*<({})>\s*'.format(trim_whitespaces_tags))
@@ -37,7 +38,6 @@ markdown_translate = {
     'h5': '#####',
     'h6': '######',
     'hr': '---',
-    'p': '\n',
     'blockquote': '>',
 }
 
@@ -69,14 +69,17 @@ def convert(html):
     text = '\n```{}\n{}\n```\n'.format(lang, e.text.strip('\n'))
     doc(parent).replace_with(text)
 
-  # a
-  for e in doc('a'):
-    text = '[{}]({})'.format(e.text, e.attrib.get('href', e.text))
-    doc(e).replace_with(text)
-
   # img
   for e in doc('img'):
-    text = '![{}]({})'.format(e.attrib.get('alt', ''), e.attrib.get('src', ''))
+    src = e.attrib.get('src', '')
+    alt = e.attrib.get('alt', os.path.basename(src))
+    text = '![{}]({})'.format(alt, src)
+    doc(e).replace_with(text)
+
+  # a
+  for e in doc('a'):
+    href = e.attrib.get('href', e.text)
+    text = '[{}]({})'.format(e.text.strip(), href)
     doc(e).replace_with(text)
 
   # i,em,b,strong,del,code
@@ -90,11 +93,9 @@ def convert(html):
       text = ''
     doc(e).replace_with(text)
 
-  # h1,h2,h3,h4,h5,h6,hr,p,blockquote
+  # h1,h2,h3,h4,h5,h6,hr,blockquote
   for e in doc(','.join(markdown_translate.keys())):
-    text = markdown_translate[e.tag]
-    if e.tag != 'p':
-      text += ' '
+    text = markdown_translate[e.tag] + ' '
     text += e.text or ''
     text = '\n{}\n'.format(text)
     doc(e).replace_with(text)
@@ -116,4 +117,9 @@ def convert(html):
     text = '\n' + '\n'.join(items) + '\n'
     doc(e).replace_with(text)
 
-  return multiple_newlines_re.sub('\n\n', doc.html()).strip()
+  md = doc.html()
+  md = md.replace('<p>', '\n\n')
+  md = md.replace('</p>', '\n\n')
+  md = md.replace('&gt;', '>')
+  md = multiple_newlines_re.sub('\n\n', md)
+  return md.strip()
