@@ -25,7 +25,7 @@ with open('requirements.txt') as f:
 
 setuptools.setup(
     name="html2md",
-    version="0.1.6",
+    version="0.1.7",
     author="David Cavazos",
     author_email="dcavazosw@gmail.com",
     description="HTML to Markdown converter.",

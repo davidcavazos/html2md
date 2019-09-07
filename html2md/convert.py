@@ -67,17 +67,6 @@ def convert(html):
     doc = PyQuery('<body>{}</body>'.format(doc.html()))
   doc = doc('body')
 
-  # p
-  for e in doc('p'):
-    if is_nested(e):
-      continue
-    text = lxml.html.tostring(e).decode('utf-8')
-    text = text.replace('<p>', '')
-    text = text.replace('</p>', '')
-    text = text.replace('<p/>', '')
-    text = '\n\n' + text + '\n\n'
-    doc(e).replace_with(text)
-
   # Code block: <pre> <code>
   # Note: code blocks *must* happen before inline <code>.
   for code in doc('pre code'):
@@ -141,7 +130,7 @@ def convert(html):
     text = '\n\n---\n\n'
     doc(e).replace_with(text)
 
-  # Don't translate <blockquote>, <ul>, <ol> or <li> due to nesting intricacies.
+  # Don't translate <p> <blockquote>, <ul>, <ol> or <li> due to nesting.
   md = doc.html()
   md = md.replace('&gt;', '>')
   md = multiple_newlines_re.sub('\n\n', md)
