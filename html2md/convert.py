@@ -17,6 +17,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import lxml
 import os
 import re
 from pyquery import PyQuery
@@ -30,18 +31,16 @@ trim_whitespaces_tags = 'ol|ul|li'
 trim_whitespaces_open_re = re.compile(r'\s*<({})>\s*'.format(trim_whitespaces_tags))
 trim_whitespaces_close_re = re.compile(r'\s*</({})>\s*'.format(trim_whitespaces_tags))
 
-markdown_translate = {
+translate_headers = {
     'h1': '#',
     'h2': '##',
     'h3': '###',
     'h4': '####',
     'h5': '#####',
     'h6': '######',
-    'hr': '---',
-    'blockquote': '>',
 }
 
-markdown_translate_inline = {
+translate_inline = {
     'i': '*',
     'em': '*',
     'b': '**',
@@ -49,6 +48,12 @@ markdown_translate_inline = {
     'del': '~~',
     "code": '`',
 }
+
+
+def is_nested(e, valid_parent_tags=None):
+  valid_parent_tags = set(valid_parent_tags or {}) | {'body'}
+  parents = {parent.tag for parent in e.iterancestors()}
+  return len(parents - valid_parent_tags) > 0
 
 
 def convert(html):
@@ -62,64 +67,82 @@ def convert(html):
     doc = PyQuery('<body>{}</body>'.format(doc.html()))
   doc = doc('body')
 
-  # pre code
-  for e in doc('pre code'):
-    parent = e.getparent()
-    lang = parent.attrib.get('class', '')
-    text = '\n```{}\n{}\n```\n'.format(lang, e.text.strip('\n'))
-    doc(parent).replace_with(text)
-
-  # img
-  for e in doc('img'):
-    src = e.attrib.get('src', '')
-    alt = e.attrib.get('alt', os.path.basename(src))
-    text = '![{}]({})'.format(alt, src)
+  # p
+  for e in doc('p'):
+    if is_nested(e):
+      continue
+    text = lxml.html.tostring(e).decode('utf-8')
+    text = text.replace('<p>', '')
+    text = text.replace('</p>', '')
+    text = text.replace('<p/>', '')
+    text = '\n\n' + text + '\n\n'
     doc(e).replace_with(text)
 
-  # a
-  for e in doc('a'):
-    href = e.attrib.get('href', e.text)
-    text = '[{}]({})'.format(e.text.strip(), href)
+  # Code block: <pre> <code>
+  # Note: code blocks *must* happen before inline <code>.
+  for code in doc('pre code'):
+    e = code.getparent()
+    if is_nested(e):
+      continue
+    lang = e.attrib.get('class', '')
+    text = '\n\n```{}\n{}\n```\n\n'.format(lang, code.text.strip('\n'))
     doc(e).replace_with(text)
 
-  # i,em,b,strong,del,code
+  # Inline: <i> <em> <b> <strong> <del> <code>
   # Note: we iterate on reversed order so nested tags can be processed in the
   # correct order: <b><i>hello</i></b> will process the <b> tag after the <i>
-  for e in reversed(doc(','.join(markdown_translate_inline.keys()))):
+  for e in reversed(doc(','.join(translate_inline.keys()))):
+    if is_nested(e, translate_inline.keys()):
+      continue
     if e.text:
-      surround = markdown_translate_inline[e.tag]
+      surround = translate_inline[e.tag]
       text = surround + e.text + surround
     else:
       text = ''
     doc(e).replace_with(text)
 
-  # h1,h2,h3,h4,h5,h6,hr,blockquote
-  for e in doc(','.join(markdown_translate.keys())):
-    text = markdown_translate[e.tag] + ' '
-    text += e.text or ''
-    text = '\n{}\n'.format(text)
+  # Hyperlink: <a>
+  for e in doc('a'):
+    if is_nested(e):
+      continue
+    text = (e.text or '').strip()
+    href = e.attrib.get('href', '')
+    if not text:
+      text = href
+    elif not href:
+      href = text
+    text = '[{}]({})'.format(text, href)
     doc(e).replace_with(text)
 
-  # ol,ul
-  md_list_tag = lambda tag: '1. ' if tag == 'ol' else '* ' if tag == 'ul' else ''
-  for e in reversed(doc('ol,ul')):
-    indents = 0
-    for parent in PyQuery(e).parents():
-      indents += len(md_list_tag(parent.tag))
-
-    items = []
-    items_tag = md_list_tag(e.tag)
-    for child in PyQuery(e).children():
-      if child.tag == 'li':
-        child_text = child.text or ''
-        items.append(' '*indents + items_tag + child_text)
-
-    text = '\n' + '\n'.join(items) + '\n'
+  # Image: <img>
+  for e in doc('img'):
+    if is_nested(e):
+      continue
+    alt = e.attrib.get('alt', '')
+    src = e.attrib.get('src', '')
+    if not alt:
+      alt = os.path.splitext(os.path.basename(src))[0]
+    elif not src:
+      src = alt
+    text = '![{}]({})'.format(alt, src)
     doc(e).replace_with(text)
 
+  # Headers: <h1> <h2> <h3> <h4> <h5> <h6>
+  for e in doc(','.join(translate_headers.keys())):
+    if is_nested(e):
+      continue
+    text = '\n\n{} {}\n\n'.format(translate_headers[e.tag], e.text or '')
+    doc(e).replace_with(text)
+
+  # Horizontal ruler: <hr>
+  for e in doc('hr'):
+    if is_nested(e):
+      continue
+    text = '\n\n---\n\n'
+    doc(e).replace_with(text)
+
+  # Don't translate <blockquote>, <ul>, <ol> or <li> due to nesting intricacies.
   md = doc.html()
-  md = md.replace('<p>', '\n\n')
-  md = md.replace('</p>', '\n\n')
   md = md.replace('&gt;', '>')
   md = multiple_newlines_re.sub('\n\n', md)
   return md.strip()
